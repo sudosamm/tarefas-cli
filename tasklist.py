@@ -1,22 +1,110 @@
 import json  # biblioteca para uso de arquivos JSON
-from pathlib import Path
+import os
+import re
 from datetime import datetime  # biblioteca para manipulação de datas
+from pathlib import Path
+
+LIST_NAME = "Lista de Tarefas"
+COMMON_WORDS = ["de", "da", "do", "das", "dos"]
+FILE_EXT = ".json"
+FILE_NAME = LIST_NAME.replace(" ", "_")
+FILE_NAME = re.sub('[^A-Za-z0-9_-]+', '', FILE_NAME)
+FILE_NAME = FILE_NAME.lower() + FILE_EXT
+DATA_FILE = Path.home() / 'Documents' / 'tasklist_data' / FILE_NAME
+MENU = [
+    "Adicionar Tarefa",
+    "Listar Tarefas",
+    "Marcar como Concluída",
+    "Remover Tarefas",
+    "Sair",
+]
+
+
+def main():
+    task_list = load_tasks()
+    if task_list is None:
+        main_loop = False
+    else:
+        main_loop = True
+    while main_loop:
+        print("=================================")
+        print("Gerenciador de Tarefas")
+        print("=================================")
+
+        interaction = verify_data(MENU, "menu")
+
+        match interaction:
+            case 1:
+                add_task(task_list)
+            case 2:
+                list_tasks(task_list)
+            case 3:
+                interaction = verify_data(task_list, "complete")
+                if interaction is None:
+                    continue
+                complete_task(interaction, task_list)
+            case 4:
+                interaction = verify_data(task_list, "remove")
+                if interaction is None:
+                    continue
+                remove_task(interaction, task_list)
+            case 5:
+                print("Encerrando o programa...")
+                main_loop = False
+
+
+def find_list_file():
+    try:
+        file_path = DATA_FILE
+        with open(file_path, 'r', encoding="utf-8") as read_data:
+            list_data = json.load(read_data)
+        return list_data
+    except OSError as e:
+        print(f"Erro ao ler o arquivo: {e}")
+        user_choice = input("Deseja continuar com uma nova lista? (S/N) ")
+        if user_choice.lower() == 's':
+            return create_list_file()
+        else:
+            print("Operação cancelada. Nenhum arquivo foi criado. O sistema será encerrado.")
+            return None
+
+
+def create_list_file():
+    global FILE_NAME
+    global DATA_FILE
+    list_name = input("Digite o nome que deseja para a nova lista (ex: Afazeres Domésticos): ")
+    file_name = list_name.replace(" ", "_")
+    file_name = re.sub('[^A-Za-z0-9_-]+', '', file_name)
+    file_name = file_name.lower() + FILE_EXT
+    FILE_NAME = file_name
+    DATA_FILE = Path.home() / 'Documents' / 'tasklist_data' / FILE_NAME
+    list_data = []
+    save_tasks(list_data)
+    print(f"Novo arquivo de tarefas criado em: {DATA_FILE}")
+    return list_data
+
+
+def system_action():
+    user_choice = input("A lista padrão não foi encontrada. Deseja criar uma nova lista de tarefas? (S/N) ")
+    if user_choice.lower() == 's':
+        return create_list_file()
+    else:
+        print("Operação cancelada. Nenhum arquivo foi criado.")
+        return None
 
 
 def load_tasks():
-    # abre o arquivo tarefas.json para leitura como "read_data"
-    try:
-        file_path = Path.home() / 'Documents' / 'tasklist_data' / 'tasklist.json'
-        with open(file_path, 'r', encoding="utf-8") as read_data:  
-            # a variável "tasks" recebe o conteúdo do arquivo json
-            tasks = json.load(read_data)  
-    except:
-        tasks = []
-    return tasks
+    global FILE_NAME
+    global DATA_FILE
+    if os.path.exists(DATA_FILE):
+        return find_list_file()
+    else:
+        return system_action()
+    return list_data
 
 
 def show_menu():
-    for i, item in enumerate(menu):
+    for i, item in enumerate(MENU):
         print(f"{i + 1}. {item}")
 
 
@@ -39,7 +127,7 @@ def verify_data(area, objective):
                 interaction = input(
                     "Digite o número da opção desejada: "
                 )
-        if (interaction.isdigit()) or (interaction.strip() != ""):
+        if (interaction.isdigit()) and (interaction.strip() != ""):
             interaction = int(interaction)
             if 1 <= interaction <= len(area):
                 menu_loop = False
@@ -52,7 +140,7 @@ def verify_data(area, objective):
 
 
 def save_tasks(task_list):
-    file_path = Path.home() / 'Documents' / 'tasklist_data' / 'tasklist.json'
+    file_path = DATA_FILE
     file_path.parent.mkdir(parents=True, exist_ok=True)
     with open(file_path, "w", encoding="utf-8") as write_data:
         json.dump(
@@ -69,7 +157,6 @@ def add_task(task_list):
             if description == 0:
                 print("Operação cancelada.\n")
                 menu_loop = False
-                return None
             else:
                 print(f"Entrada inválida. '{description}' não é um valor válido para a descrição da tarefa.\n")
         elif description.strip() == "":
@@ -81,9 +168,9 @@ def add_task(task_list):
     )  # recebe a data atual formatada no exato momento em que o usuário adicionar a tarefa.
     task = {
         "id": len(task_list) + 1,
-        "descricao": description,
-        "concluida": False,
-        "criada_em": today,
+        "description": description,
+        "concluded": False,
+        "created_at": today,
     }
     task_list.append(task)
     save_tasks(task_list)
@@ -96,16 +183,16 @@ def list_tasks(task_list):
         print("Nenhuma tarefa encontrada.\n")
     else:
         for task in task_list:
-            status = "Concluída" if task["concluida"] else "Pendente"
+            status = "Concluída" if task["concluded"] else "Pendente"
             print(
-                f"{task['id']}. {task['descricao']} - {status} (Criada em: {task['criada_em']})"
+                f"{task['id']}. {task['description']} - {status} (Criada em: {task['created_at']})"
             )
 
 
 def complete_task(task_id, task_list):
     for task in task_list:
         if task["id"] == task_id:
-            task["concluida"] = True
+            task["concluded"] = True
             save_tasks(task_list)
             print(f"Tarefa {task_id} marcada como concluída.")
             return
@@ -126,39 +213,4 @@ def remove_task(task_id, task_list):
     print(f"Tarefa {task_id} removida com sucesso.\n")
 
 
-menu = [
-    "Adicionar Tarefa",
-    "Listar Tarefas",
-    "Marcar como Concluída",
-    "Remover Tarefas",
-    "Sair",
-]  # menu armazenado
-
-if __name__ == "__main__":
-    main_loop = True  # variável de controle do loop principal
-    while main_loop:
-        task_list = load_tasks()
-        print("=================================")
-        print("Gerenciador de Tarefas")
-        print("=================================")
-
-        interaction = verify_data(menu, "menu")
-
-        match interaction:
-            case 1:
-                add_task(task_list)
-            case 2:
-                list_tasks(task_list)
-            case 3:
-                interaction = verify_data(task_list, "complete")
-                if interaction is None:
-                    continue
-                complete_task(interaction, task_list)
-            case 4:
-                interaction = verify_data(task_list, "remove")
-                if interaction is None:
-                    continue
-                remove_task(interaction, task_list)
-            case 5:
-                print("Encerrando o programa...")
-                main_loop = False
+main()

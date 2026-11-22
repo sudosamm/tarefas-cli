@@ -34,6 +34,14 @@ Changelog manual para me manter a par do que estou fazendo.
 > - O código cria automaticamente sua própria lista em `/caminho/para/Documents/taskfile_data/tasklist.json`.
 > - Script principal renomeado para `tasklist.py`.
 
+### 22/11/2026
+Commit atual
+> - Corrigido bug que fazia com que o menu falhe ao inserir qualquer caractere.
+> - Adicionadas variáveis globais para uso com a criação de listas personalizadas.
+> - Corrigida a possibilidade do código falhar ao entregar uma lista corrompida ou impossível de carregar.
+> - Adicionada a verificação da existência da lista default (tasklist.json).
+> - Adicionada a confirmação de criação de uma nova lista caso necessário.
+
 ---
 
 ## To-Do List (lista de afazeres para a lista de tarefas, redundante mas é isso aí mesmo)
@@ -42,8 +50,14 @@ Changelog manual para me manter a par do que estou fazendo.
 - [x] Verificar e validar as respostas do usuário para prevenir erros.
 - [x] Impedir inserção de tarefas ~~com apenas uma ou duas palavras~~ vazias.
 - [x] Padronizar a linguagem.
-- [ ] Colocar `Data de Conclusão` para as tarefas.
-- [x] Permitir que o sistema rode mesmo sem um arquivo `.json`.
-- [ ] Possibilitar a criação de várias listas (pode ser útil).
 - [x] Armazenar e ler o(s) arquivo(s) de tarefas em uma pasta específica do sistema ao invés da raíz onde o projeto se encontra.
 - [x] Configurar formatação UTF-8 (acho que seria essa) no arquivo.
+- [x] Permitir que o sistema rode mesmo sem um arquivo `.json`.
+- [x] Possibilitar a criação de várias listas (pode ser útil).
+- [ ] Colocar `Data de Conclusão` para as tarefas.
+- [ ] Verificar se já existem outras listas na pasta default.
+- [ ] Criar um menu para as listas (lista != itens).
+- [ ] Adicionar no menu de listas a opção para escolher a lista do usuário para usar na sessão.
+- [ ] Adicionar no menu de listas a opção para criar outras listas mesmo que já esteja usando uma.
+- [ ] Criar uma opção para apagar alguma lista ou item existente (opcional visto que o objetivo do sistema é ajudar no progresso do usuário).
+- [ ] Criar uma opção para renomear as listas e também os itens de cada lista.
